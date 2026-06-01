@@ -52,7 +52,7 @@ export const swaggerOptions = {
             model: {
               type: 'string',
               description: 'AI model to use for generation',
-              example: 'gemini-2.0-flash-preview-image-generation',
+              example: 'gemini-3.1-flash-image',
             },
             temperature: {
               type: 'number',

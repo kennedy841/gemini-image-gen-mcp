@@ -16,9 +16,9 @@ export const TOOL_SCHEMAS = {
         },
         model: {
           type: 'string',
-          enum: ['gemini-2.0-flash-preview-image-generation'],
+          enum: ['gemini-3.1-flash-image'],
           description: 'Model to use',
-          default: 'gemini-2.0-flash-preview-image-generation'
+          default: 'gemini-3.1-flash-image'
         },
         temperature: {
           type: 'number',

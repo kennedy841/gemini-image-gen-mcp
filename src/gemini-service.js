@@ -69,7 +69,7 @@ export class GeminiService {
     async generateImage(prompt, options = {}) {
         try {
             // Use the specific image generation model for Gemini
-            const modelName = options.model || 'gemini-2.0-flash-preview-image-generation';
+            const modelName = options.model || 'gemini-3.1-flash-image';
             //let response = null;
             this.logger.info(`Using model: ${modelName}`);
             this.logger.info(`Generating image with prompt: "${prompt.substring(0, 50)}..."`);

@@ -205,7 +205,7 @@ app.post('/api/generate-image', generationLimiter, authenticate, validateImageGe
     const { prompt, model, temperature, topP, topK, save } = req.body;
 
     const options = {
-			model: model || 'gemini-2.0-flash-preview-image-generation',
+			model: model || 'gemini-3.1-flash-image',
 			temperature: temperature !== undefined ? parseFloat(temperature) : 1.0,
 			topP: topP !== undefined ? parseFloat(topP) : 0.95,
 			topK: topK !== undefined ? parseInt(topK) : 40,

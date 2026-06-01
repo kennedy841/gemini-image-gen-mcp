@@ -67,7 +67,7 @@ class GeminiImageServer {
       }
 
       const options = {
-        model: args.model || 'gemini-2.0-flash-preview-image-generation',
+        model: args.model || 'gemini-3.1-flash-image',
         temperature: args.temperature !== undefined ? args.temperature : 1.0,
         topP: args.topP !== undefined ? args.topP : 0.95,
         topK: args.topK !== undefined ? args.topK : 40,
