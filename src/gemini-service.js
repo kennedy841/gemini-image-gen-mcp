@@ -74,18 +74,35 @@ export class GeminiService {
             this.logger.info(`Using model: ${modelName}`);
             this.logger.info(`Generating image with prompt: "${prompt.substring(0, 50)}..."`);
 
-            // Generate content according to documentation
-            const response = await client.models.generateContent({
-                model: modelName,
-                contents: [{ text: prompt }],
-                config: {
-                    temperature: options.temperature || 1.0,
-                    topP: options.topP || 0.95,
-                    topK: options.topK || 40,
-                    // According to documentation, we need to specify response_modalities
-                    responseModalities: [Modality.TEXT, Modality.IMAGE],
-                }
+            // Generate content according to documentation.
+            // Hard timeout so a hung API call returns a reason instead of blocking forever.
+            const timeoutMs = options.timeoutMs || 240000;
+            let timeoutHandle;
+            const timeoutPromise = new Promise((_, reject) => {
+                timeoutHandle = setTimeout(
+                    () => reject(new Error(`Gemini API timed out after ${timeoutMs}ms`)),
+                    timeoutMs
+                );
             });
+            let response;
+            try {
+                response = await Promise.race([
+                    client.models.generateContent({
+                        model: modelName,
+                        contents: [{ text: prompt }],
+                        config: {
+                            temperature: options.temperature || 1.0,
+                            topP: options.topP || 0.95,
+                            topK: options.topK || 40,
+                            // According to documentation, we need to specify response_modalities
+                            responseModalities: [Modality.TEXT, Modality.IMAGE],
+                        }
+                    }),
+                    timeoutPromise
+                ]);
+            } finally {
+                clearTimeout(timeoutHandle);
+            }
 
             this.logger.info('Image generation request completed');
 
@@ -147,26 +164,12 @@ export class GeminiService {
                 enhanced_prompt: responseText
             };
         } catch (error) {
+            // Surface the real reason to the caller instead of silently returning a
+            // placeholder (which masked failures and, via placehold.co with no timeout,
+            // could itself hang the tool call). The MCP layer turns this throw into a
+            // JSON-RPC error carrying the message.
             this.logger.error("Error generating image: ", `${error.message}`);
-            // If the API call fails, use a placeholder image
-            this.logger.info('Using placeholder image as fallback');
-            const filename = `image_${Date.now()}_placeholder.png`;
-            const filePath = path.join(this.outputImageDir, filename);
-
-            // Generate a placeholder image
-            try {
-                await this.downloadImageVideo("https://placehold.co/1024x1024/EEE/31343C?text=Gemini+Image", filePath);
-                this.logger.info(`Placeholder image saved to ${filePath}`);
-
-                return {
-                    local_path: filePath,
-                    enhanced_prompt: `Failed to generate with Gemini: ${error.message}. Used placeholder instead.`,
-                    error: error.message
-                };
-            } catch (downloadError) {
-                this.logger.error("Generating image", `Error saving placeholder image: ${downloadError.message}`);
-                throw error; // Re-throw the original error
-            }
+            throw error;
         }
     }
 
